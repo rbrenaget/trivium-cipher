@@ -17,11 +17,30 @@
 
 
 int TRIVIUM_init(TRIVIUM_ctx* ctx, const uint8_t* key, const uint8_t* iv, uint8_t keylen, uint8_t ivlen) {
+    uint8_t i;
+    
     ctx->keylen = keylen;
     ctx->ivlen = ivlen;
 
     TRIVIUM_keysetup(ctx, key);
     TRIVIUM_ivsetup(ctx, iv);
+
+    for (i = 0; i < ctx->keylen; i++)
+        ctx->states[i] = ctx->key[i];
+
+    for (i = 10; i < 36; i++)
+        ctx->states[i] = 0x0;
+
+    for (i = 0; i < ctx->ivlen; i++) {
+        ctx->states[i+11] |= ctx->iv[i] >> 5;
+        ctx->states[i+12] = ctx->iv[i] << 3;
+    }
+
+    ctx->states[35] = 0x7;
+
+    // TODO: UPDATE
+
+    // TODO: ROTATE 
 
     return 0;
 }
@@ -38,19 +57,4 @@ void TRIVIUM_ivsetup(TRIVIUM_ctx* ctx, const uint8_t* iv) {
 
     for (i = 0; i < ctx->ivlen; i++)
         ctx->iv[i] = iv[i];
-}
-
-void TRIVIUM_initialization(TRIVIUM_ctx* ctx) {
-    uint8_t i;
-
-    for (i = 0; i < ctx->keylen; i++)
-        ctx->states[i] = ctx->key[i];
-
-    ctx->states[ctx->keylen] = 0x0;
-    //ctx->states[ctx->keylen+1] = ctx->iv[0] & 0xE0;
-    //ctx->states[ctx->keylen+2] = ctx->iv[0] & 0x7;
-
-    // To be continued...
-
-    ctx->states[35] = 0x70
 }

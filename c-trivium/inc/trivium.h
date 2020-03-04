@@ -20,7 +20,7 @@ typedef struct {
   uint8_t keylen;
   uint8_t ivlen;
 
-  uint8_t states[40];
+  uint8_t states[36];
   uint8_t key[10];
   uint8_t iv[10];
 
