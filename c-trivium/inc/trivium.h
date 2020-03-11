@@ -16,19 +16,25 @@
 //#include <limits.h>
 #include <stdint.h>
 
+#define MAX_KEY_LEN 10
+#define MAX_IV_LEN 10
+
 typedef struct {
   uint8_t keylen;
   uint8_t ivlen;
 
-  uint8_t states[36];
-  uint8_t key[10];
-  uint8_t iv[10];
+  uint32_t lfsr_a[3];
+  uint32_t lfsr_b[3];
+  uint32_t lfsr_c[4];
+
+  uint8_t key[MAX_KEY_LEN];
+  uint8_t iv[MAX_IV_LEN];
 
 } TRIVIUM_ctx;
 
 
-int TRIVIUM_init(TRIVIUM_ctx* ctx, const uint8_t* key, const uint8_t* iv, uint8_t keylen, uint8_t ivlen);
-void TRIVIUM_keysetup(TRIVIUM_ctx* ctx, const uint8_t* key);
-void TRIVIUM_ivsetup(TRIVIUM_ctx* ctx, const uint8_t* iv);
+int TRIVIUM_init(TRIVIUM_ctx* ctx, const uint8_t key[], const uint8_t iv[], uint8_t keylen, uint8_t ivlen);
+void TRIVIUM_keysetup(TRIVIUM_ctx* ctx, const uint8_t key[]);
+void TRIVIUM_ivsetup(TRIVIUM_ctx* ctx, const uint8_t iv[]);
 
 #endif
