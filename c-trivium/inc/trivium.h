@@ -16,6 +16,8 @@
 //#include <limits.h>
 #include <stdint.h>
 
+#define BLOCK_SIZE 32
+
 #define MAX_KEY_LEN 10
 #define MAX_IV_LEN 10
 
@@ -36,5 +38,6 @@ typedef struct {
 int TRIVIUM_init(TRIVIUM_ctx* ctx, const uint8_t key[], const uint8_t iv[], uint8_t keylen, uint8_t ivlen);
 void TRIVIUM_keysetup(TRIVIUM_ctx* ctx, const uint8_t key[]);
 void TRIVIUM_ivsetup(TRIVIUM_ctx* ctx, const uint8_t iv[]);
+void TRIVIUM_keystream(TRIVIUM_ctx* ctx, uint32_t output[], uint32_t n);
 
 #endif

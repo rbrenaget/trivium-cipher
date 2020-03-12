@@ -15,7 +15,7 @@
 
 
 void debug_data(const uint32_t* data, uint32_t len) {
-    static const char hex[] = "0123456789abcdef";
+    static const char hex[] = "0123456789ABCDEF";
     char out[(8*len)+1];
     uint32_t i;
     uint32_t j = 0;
@@ -45,16 +45,17 @@ int main() {
     const uint8_t iv[2] = {0x00, 0x00};
     int res;
 
-
     res = TRIVIUM_init(&ctx, key, iv, sizeof(key), sizeof(iv));
 
     if (res == 0) {
+        uint32_t ouput[2];
         printf("Succes !\n");
-        ctx.lfsr_a[2] = (ctx.lfsr_a[2] << 30) | (ctx.lfsr_a[1] >> 2);
-        debug_data(&ctx.lfsr_a[2], 1);
-        debug_data(ctx.lfsr_a, 3);
-        debug_data(ctx.lfsr_b, 3);
-        debug_data(ctx.lfsr_c, 3);
+        //debug_data(ctx.lfsr_a, 3);
+        //debug_data(ctx.lfsr_b, 3);
+        //debug_data(ctx.lfsr_c, 3);
+        TRIVIUM_keystream(&ctx, ouput, 2);
+        debug_data(ctx.lfsr_c, 2);
+
     }
     else {
         printf("Something wrong !\n");
