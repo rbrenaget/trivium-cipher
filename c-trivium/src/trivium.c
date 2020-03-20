@@ -33,8 +33,33 @@
         ((p)[0]) = t;        \
     } while (0)
 
-#define GB(b, n) ((b >> n) & 1)
+// Maybe something to do better here
+#define S64(p, b) (((p)[1] << ((b) - 64)) | ((p)[2] >> (96 - (b))))
+#define S96(p, b) (((p)[2] << ((b) - 96)) | ((p)[3] >> (128 - (b))))
 
+#define GB(b, n) ((b >> n) & 1) 
+
+void debug_data(const uint32_t* data, uint32_t len) {
+    static const char hex[] = "0123456789ABCDEF";
+    char out[(8*len)+1];
+    uint32_t i;
+    uint32_t j = 0;
+
+    for (i = 0; j <= len; i += 8) {
+        out[i] = hex[(data[j] >> 28) & 0xf];
+        out[i+1] = hex[(data[j] >> 24) & 0xf];
+        out[i+2] = hex[(data[j] >> 20) & 0xf];
+        out[i+3] = hex[(data[j] >> 16) & 0xf];
+        out[i+4] = hex[(data[j] >> 12) & 0xf];
+        out[i+5] = hex[(data[j] >> 8) & 0xf];
+        out[i+6] = hex[(data[j] >> 4) & 0xf];
+        out[i+7] = hex[(data[j] >> 0) & 0xf];
+        j++;
+    }
+    out[i-8] = '\0';
+
+    printf("%s\n", out);   
+}
 
 int TRIVIUM_init(TRIVIUM_ctx* ctx, const uint8_t key[], const uint8_t iv[], uint8_t keylen, uint8_t ivlen) {
     uint32_t t1, t2, t3;
@@ -58,19 +83,37 @@ int TRIVIUM_init(TRIVIUM_ctx* ctx, const uint8_t key[], const uint8_t iv[], uint
     // Load LFSR C
     ctx->lfsr_c[0] = 0;
     ctx->lfsr_c[1] = 0;
-    ctx->lfsr_c[2] = 0x7;
+    ctx->lfsr_c[2] = 0;
+    ctx->lfsr_c[3] = 0x000e0000;
+
+    debug_data(ctx->lfsr_a, 3);
+    debug_data(ctx->lfsr_b, 3);
+    debug_data(ctx->lfsr_c, 4);
 
     // Initialization
     for (uint8_t i = 0; i < 36; i++) {
         // Update LFSRs
         // TODO: optimization with #define
+        /*uint32_t tx = ((ctx->lfsr_c[2] << 15) | (ctx->lfsr_c[3] >> 17));
+        debug_data(&tx, 1);
+
         t1 = ((ctx->lfsr_a[1] << 2) | (ctx->lfsr_a[2] >> 30)) ^ ((ctx->lfsr_a[1] << 29) | (ctx->lfsr_a[2] >> 3));
         t2 = ((ctx->lfsr_b[1] << 5) | (ctx->lfsr_b[2] >> 27)) ^ ((ctx->lfsr_b[1] << 20) | (ctx->lfsr_b[2] >> 12));
         t3 = ((ctx->lfsr_c[1] << 2) | (ctx->lfsr_c[2] >> 30)) ^ ((ctx->lfsr_c[2] << 15) | (ctx->lfsr_c[3] >> 17));
 
         t1 ^= (((ctx->lfsr_a[1] << 27) | (ctx->lfsr_a[2] >> 5)) & ((ctx->lfsr_a[1] << 28) | (ctx->lfsr_a[2] >> 4))) ^ ((ctx->lfsr_b[1] << 14) | (ctx->lfsr_b[2] >> 18));
         t2 ^= (((ctx->lfsr_b[1] << 18) | (ctx->lfsr_b[2] >> 14)) & ((ctx->lfsr_b[1] << 19) | (ctx->lfsr_b[2] >> 13))) ^ ((ctx->lfsr_c[1] << 23) | (ctx->lfsr_c[2] >> 9));
-        t3 ^= (((ctx->lfsr_c[2] << 13) | (ctx->lfsr_c[3] >> 19)) & ((ctx->lfsr_c[2] << 14) | (ctx->lfsr_c[3] >> 18))) ^ ((ctx->lfsr_a[1] << 5) | (ctx->lfsr_a[2] >> 27));
+        t3 ^= (((ctx->lfsr_c[2] << 13) | (ctx->lfsr_c[3] >> 19)) & ((ctx->lfsr_c[2] << 14) | (ctx->lfsr_c[3] >> 18))) ^ ((ctx->lfsr_a[1] << 5) | (ctx->lfsr_a[2] >> 27));*/
+
+        t1 = S64(ctx->lfsr_a, 66) ^ S64(ctx->lfsr_a, 93);
+        t2 = S64(ctx->lfsr_b, 69) ^ S64(ctx->lfsr_b, 84);
+        t3 = S64(ctx->lfsr_c, 66) ^ S96(ctx->lfsr_c, 111);
+
+        debug_data(&t3, 1);
+
+        t1 ^= (S64(ctx->lfsr_a, 91) & S64(ctx->lfsr_a, 92)) ^ S64(ctx->lfsr_b, 78);
+        t2 ^= (S64(ctx->lfsr_b, 82) & S64(ctx->lfsr_b, 83)) ^ S64(ctx->lfsr_c, 87);
+        t3 ^= (S96(ctx->lfsr_c, 109) & S96(ctx->lfsr_c, 110)) ^ S64(ctx->lfsr_a, 69); 
 
         // Rotate LFSRs
         ROTATE_LFSR_3(ctx->lfsr_a, t3);
@@ -106,16 +149,16 @@ void TRIVIUM_keystream(TRIVIUM_ctx* ctx, uint32_t output[], uint32_t n) {
 
     for (uint32_t i = 0; i < n; i++) {
         // Update LFSRs
-        // TODO: optimization with #define
-        t1 = ((ctx->lfsr_a[1] << 2) | (ctx->lfsr_a[2] >> 30)) ^ ((ctx->lfsr_a[1] << 29) | (ctx->lfsr_a[2] >> 3));
-        t2 = ((ctx->lfsr_b[1] << 5) | (ctx->lfsr_b[2] >> 27)) ^ ((ctx->lfsr_b[1] << 20) | (ctx->lfsr_b[2] >> 12));
-        t3 = ((ctx->lfsr_c[1] << 2) | (ctx->lfsr_c[2] >> 30)) ^ ((ctx->lfsr_c[2] << 15) | (ctx->lfsr_c[3] >> 17));
+        
+        t1 = S64(ctx->lfsr_a, 66) ^ S64(ctx->lfsr_a, 93);
+        t2 = S64(ctx->lfsr_b, 69) ^ S64(ctx->lfsr_b, 84);
+        t3 = S64(ctx->lfsr_c, 66) ^ S96(ctx->lfsr_c, 111);
 
-        output[i] = t1 ^ t2 ^ t3;
+        output[i] = t1 ^ t2 ^ t3;        
 
-        t1 ^= (((ctx->lfsr_a[1] << 27) | (ctx->lfsr_a[2] >> 5)) & ((ctx->lfsr_a[1] << 28) | (ctx->lfsr_a[2] >> 4))) ^ ((ctx->lfsr_b[1] << 14) | (ctx->lfsr_b[2] >> 18));
-        t2 ^= (((ctx->lfsr_b[1] << 18) | (ctx->lfsr_b[2] >> 14)) & ((ctx->lfsr_b[1] << 19) | (ctx->lfsr_b[2] >> 13))) ^ ((ctx->lfsr_c[1] << 23) | (ctx->lfsr_c[2] >> 9));
-        t3 ^= (((ctx->lfsr_c[2] << 13) | (ctx->lfsr_c[3] >> 19)) & ((ctx->lfsr_c[2] << 14) | (ctx->lfsr_c[3] >> 18))) ^ ((ctx->lfsr_a[1] << 5) | (ctx->lfsr_a[2] >> 27));
+        t1 ^= (S64(ctx->lfsr_a, 91) & S64(ctx->lfsr_a, 92)) ^ S64(ctx->lfsr_b, 78);
+        t2 ^= (S64(ctx->lfsr_b, 82) & S64(ctx->lfsr_b, 83)) ^ S64(ctx->lfsr_c, 87);
+        t3 ^= (S96(ctx->lfsr_c, 109) & S96(ctx->lfsr_c, 110)) ^ S64(ctx->lfsr_a, 69); 
 
         // Rotate LFSRs
         ROTATE_LFSR_3(ctx->lfsr_a, t3);

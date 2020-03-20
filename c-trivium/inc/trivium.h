@@ -40,4 +40,6 @@ void TRIVIUM_keysetup(TRIVIUM_ctx* ctx, const uint8_t key[]);
 void TRIVIUM_ivsetup(TRIVIUM_ctx* ctx, const uint8_t iv[]);
 void TRIVIUM_keystream(TRIVIUM_ctx* ctx, uint32_t output[], uint32_t n);
 
+void debug_data(const uint32_t* data, uint32_t len);
+
 #endif
