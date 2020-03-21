@@ -1,23 +1,38 @@
 /**
  * @file trivium.c
  * @author Romain Brenaget
- * @brief 
+ * @brief Implementation of Trivium algorithm by Christophe De Canniere and Bart Preneel
+ *        Inspired from : https://www.ecrypt.eu.org/stream/e2-trivium.html
  * @version 0.1
  * @date 2020-03-03
- * 
- * @copyright Copyright (c) 2020
- * 
  */
 
 #include "trivium.h"
-#include <stdio.h>
 
-#define U8TO32(p)               \
+// Converts 4 bytes to a 32 bits unsigned integer (big endian)
+#define U8TO32_BE(p)              \
     (((uint32_t)((p)[0]) << 24) | \
      ((uint32_t)((p)[1]) << 16) | \
      ((uint32_t)((p)[2]) <<  8) | \
      ((uint32_t)((p)[3])     ))
 
+// Converts 32 bits unsigned integer to 4 bytes (little endian)
+#define U32TO8_LE(p, v)                \
+    do {                               \
+        (p)[0] = ((uint8_t)(v));       \
+        (p)[1] = ((uint8_t)(v) >> 8);  \
+        (p)[2] = ((uint8_t)(v) >> 16); \
+        (p)[3] = ((uint8_t)(v) >> 24); \
+    } while (0)                        \
+
+// Reverts a 32 bits unsigned integer
+#define REVERT_U32(p)                   \
+    (((uint32_t)((p) << 24)) |          \
+     ((uint32_t)((p) <<  8) & 0x00ff0000) |   \
+     ((uint32_t)((p) >>  8) & 0x0000ff00) |   \
+     ((uint32_t)(p)  >> 24))
+
+// One rotation of 32 bits on a LFSR of size 3 (max 96 bits)
 #define ROTATE_LFSR_3(p, t)  \
     do {                     \
         ((p)[2]) = ((p)[1]); \
@@ -25,6 +40,7 @@
         ((p)[0]) = t;        \
     } while (0)
 
+// One rotation of 32 bits on a LFSR of size 4 (max 128 bits)
 #define ROTATE_LFSR_4(p, t)  \
     do {                     \
         ((p)[3]) = ((p)[2]); \
@@ -37,33 +53,19 @@
 #define S64(p, b) (((p)[1] << ((b) - 64)) | ((p)[2] >> (96 - (b))))
 #define S96(p, b) (((p)[2] << ((b) - 96)) | ((p)[3] >> (128 - (b))))
 
-#define GB(b, n) ((b >> n) & 1) 
-
-void debug_data(const uint32_t* data, uint32_t len) {
-    static const char hex[] = "0123456789ABCDEF";
-    char out[(8*len)+1];
-    uint32_t i;
-    uint32_t j = 0;
-
-    for (i = 0; j <= len; i += 8) {
-        out[i] = hex[(data[j] >> 28) & 0xf];
-        out[i+1] = hex[(data[j] >> 24) & 0xf];
-        out[i+2] = hex[(data[j] >> 20) & 0xf];
-        out[i+3] = hex[(data[j] >> 16) & 0xf];
-        out[i+4] = hex[(data[j] >> 12) & 0xf];
-        out[i+5] = hex[(data[j] >> 8) & 0xf];
-        out[i+6] = hex[(data[j] >> 4) & 0xf];
-        out[i+7] = hex[(data[j] >> 0) & 0xf];
-        j++;
-    }
-    out[i-8] = '\0';
-
-    printf("%s\n", out);   
-}
-
-int TRIVIUM_init(TRIVIUM_ctx* ctx, const uint8_t key[], const uint8_t iv[], uint8_t keylen, uint8_t ivlen) {
+/**
+ * @brief Initialization of Trivium. 
+ * 
+ * @param ctx Structure containing the context of Trivium.
+ * @param key 10 bytes max secret key.
+ * @param iv 10 bytes max initialization vector.
+ * @param keylen Specifies the exact length of the key.
+ * @param ivlen Specifies the exact lenght of the iv.
+ */
+void TRIVIUM_init(TRIVIUM_ctx* ctx, const uint8_t key[], const uint8_t iv[], uint8_t keylen, uint8_t ivlen) {
     uint32_t t1, t2, t3;
 
+    // Store key and iv in context
     ctx->keylen = keylen;
     ctx->ivlen = ivlen;
     
@@ -71,14 +73,14 @@ int TRIVIUM_init(TRIVIUM_ctx* ctx, const uint8_t key[], const uint8_t iv[], uint
     TRIVIUM_ivsetup(ctx, iv);
 
     // Load key into LFSR A
-    ctx->lfsr_a[0] = U8TO32(ctx->key);
-    ctx->lfsr_a[1] = U8TO32(ctx->key + 4);
-    ctx->lfsr_a[2] = U8TO32(ctx->key + 8) & 0xffff0000;
+    ctx->lfsr_a[0] = U8TO32_BE(ctx->key);
+    ctx->lfsr_a[1] = U8TO32_BE(ctx->key + 4);
+    ctx->lfsr_a[2] = U8TO32_BE(ctx->key + 8) & 0xffff0000;
 
     // Load iv into LFSR B
-    ctx->lfsr_b[0] = U8TO32(ctx->iv);
-    ctx->lfsr_b[1] = U8TO32(ctx->iv + 4);
-    ctx->lfsr_b[2] = U8TO32(ctx->iv + 8) & 0xffff0000;
+    ctx->lfsr_b[0] = U8TO32_BE(ctx->iv);
+    ctx->lfsr_b[1] = U8TO32_BE(ctx->iv + 4);
+    ctx->lfsr_b[2] = U8TO32_BE(ctx->iv + 8) & 0xffff0000;
 
     // Load LFSR C
     ctx->lfsr_c[0] = 0;
@@ -86,30 +88,12 @@ int TRIVIUM_init(TRIVIUM_ctx* ctx, const uint8_t key[], const uint8_t iv[], uint
     ctx->lfsr_c[2] = 0;
     ctx->lfsr_c[3] = 0x000e0000;
 
-    debug_data(ctx->lfsr_a, 3);
-    debug_data(ctx->lfsr_b, 3);
-    debug_data(ctx->lfsr_c, 4);
-
-    // Initialization
+    // Initialization: 36 rotations of 32 bits
     for (uint8_t i = 0; i < 36; i++) {
         // Update LFSRs
-        // TODO: optimization with #define
-        /*uint32_t tx = ((ctx->lfsr_c[2] << 15) | (ctx->lfsr_c[3] >> 17));
-        debug_data(&tx, 1);
-
-        t1 = ((ctx->lfsr_a[1] << 2) | (ctx->lfsr_a[2] >> 30)) ^ ((ctx->lfsr_a[1] << 29) | (ctx->lfsr_a[2] >> 3));
-        t2 = ((ctx->lfsr_b[1] << 5) | (ctx->lfsr_b[2] >> 27)) ^ ((ctx->lfsr_b[1] << 20) | (ctx->lfsr_b[2] >> 12));
-        t3 = ((ctx->lfsr_c[1] << 2) | (ctx->lfsr_c[2] >> 30)) ^ ((ctx->lfsr_c[2] << 15) | (ctx->lfsr_c[3] >> 17));
-
-        t1 ^= (((ctx->lfsr_a[1] << 27) | (ctx->lfsr_a[2] >> 5)) & ((ctx->lfsr_a[1] << 28) | (ctx->lfsr_a[2] >> 4))) ^ ((ctx->lfsr_b[1] << 14) | (ctx->lfsr_b[2] >> 18));
-        t2 ^= (((ctx->lfsr_b[1] << 18) | (ctx->lfsr_b[2] >> 14)) & ((ctx->lfsr_b[1] << 19) | (ctx->lfsr_b[2] >> 13))) ^ ((ctx->lfsr_c[1] << 23) | (ctx->lfsr_c[2] >> 9));
-        t3 ^= (((ctx->lfsr_c[2] << 13) | (ctx->lfsr_c[3] >> 19)) & ((ctx->lfsr_c[2] << 14) | (ctx->lfsr_c[3] >> 18))) ^ ((ctx->lfsr_a[1] << 5) | (ctx->lfsr_a[2] >> 27));*/
-
         t1 = S64(ctx->lfsr_a, 66) ^ S64(ctx->lfsr_a, 93);
         t2 = S64(ctx->lfsr_b, 69) ^ S64(ctx->lfsr_b, 84);
         t3 = S64(ctx->lfsr_c, 66) ^ S96(ctx->lfsr_c, 111);
-
-        debug_data(&t3, 1);
 
         t1 ^= (S64(ctx->lfsr_a, 91) & S64(ctx->lfsr_a, 92)) ^ S64(ctx->lfsr_b, 78);
         t2 ^= (S64(ctx->lfsr_b, 82) & S64(ctx->lfsr_b, 83)) ^ S64(ctx->lfsr_c, 87);
@@ -120,10 +104,14 @@ int TRIVIUM_init(TRIVIUM_ctx* ctx, const uint8_t key[], const uint8_t iv[], uint
         ROTATE_LFSR_3(ctx->lfsr_b, t1);
         ROTATE_LFSR_4(ctx->lfsr_c, t2);
     }
-
-    return 0;
 }
 
+/**
+ * @brief Setup the context key.
+ * 
+ * @param ctx Structure containing the context of Trivium.
+ * @param key 10 bytes max secret key.
+ */
 void TRIVIUM_keysetup(TRIVIUM_ctx* ctx, const uint8_t key[]) {
     uint8_t i;
 
@@ -134,6 +122,12 @@ void TRIVIUM_keysetup(TRIVIUM_ctx* ctx, const uint8_t key[]) {
         ctx->key[i] = 0;
 }
 
+/**
+ * @brief Setup the context initialization vector.
+ * 
+ * @param ctx Structure containing the context of Trivium.
+ * @param iv 10 bytes max secret initialization vector.
+ */
 void TRIVIUM_ivsetup(TRIVIUM_ctx* ctx, const uint8_t iv[]) {
     uint8_t i;
 
@@ -144,17 +138,23 @@ void TRIVIUM_ivsetup(TRIVIUM_ctx* ctx, const uint8_t iv[]) {
         ctx->iv[i] = 0;
 }
 
-void TRIVIUM_keystream(TRIVIUM_ctx* ctx, uint32_t output[], uint32_t n) {
+/**
+ * @brief Generate a 32 bits key stream by rotation. 
+ * 
+ * @param ctx Structure containing the context of Trivium.
+ * @param output Stores the output of the key stream.
+ * @param n Specifies the number of rotations.
+ */
+void TRIVIUM_genkeystream32(TRIVIUM_ctx* ctx, uint32_t output[], uint32_t n) {
     uint32_t t1, t2, t3;
 
     for (uint32_t i = 0; i < n; i++) {
         // Update LFSRs
-        
         t1 = S64(ctx->lfsr_a, 66) ^ S64(ctx->lfsr_a, 93);
         t2 = S64(ctx->lfsr_b, 69) ^ S64(ctx->lfsr_b, 84);
         t3 = S64(ctx->lfsr_c, 66) ^ S96(ctx->lfsr_c, 111);
 
-        output[i] = t1 ^ t2 ^ t3;        
+        output[i] = REVERT_U32(t1 ^ t2 ^ t3);       
 
         t1 ^= (S64(ctx->lfsr_a, 91) & S64(ctx->lfsr_a, 92)) ^ S64(ctx->lfsr_b, 78);
         t2 ^= (S64(ctx->lfsr_b, 82) & S64(ctx->lfsr_b, 83)) ^ S64(ctx->lfsr_c, 87);
