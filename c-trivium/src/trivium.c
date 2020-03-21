@@ -17,37 +17,31 @@
      ((uint32_t)((p)[3])     ))
 
 // Converts 32 bits unsigned integer to 4 bytes (little endian)
-#define U32TO8_LE(p, v)                \
-    do {                               \
-        (p)[0] = ((uint8_t)(v));       \
-        (p)[1] = ((uint8_t)(v) >> 8);  \
-        (p)[2] = ((uint8_t)(v) >> 16); \
-        (p)[3] = ((uint8_t)(v) >> 24); \
-    } while (0)                        \
+#define U32TO8_LE(p, v)            \
+    (p)[0] = ((uint8_t)(v));       \
+    (p)[1] = ((uint8_t)(v) >> 8);  \
+    (p)[2] = ((uint8_t)(v) >> 16); \
+    (p)[3] = ((uint8_t)(v) >> 24)  \
 
 // Reverts a 32 bits unsigned integer
-#define REVERT_U32(p)                   \
-    (((uint32_t)((p) << 24)) |          \
-     ((uint32_t)((p) <<  8) & 0x00ff0000) |   \
-     ((uint32_t)((p) >>  8) & 0x0000ff00) |   \
+#define REVERT_U32(p)                       \
+    (((uint32_t)((p) << 24)) |              \
+     ((uint32_t)((p) <<  8) & 0x00ff0000) | \
+     ((uint32_t)((p) >>  8) & 0x0000ff00) | \
      ((uint32_t)(p)  >> 24))
 
 // One rotation of 32 bits on a LFSR of size 3 (max 96 bits)
-#define ROTATE_LFSR_3(p, t)  \
-    do {                     \
-        ((p)[2]) = ((p)[1]); \
-        ((p)[1]) = ((p)[0]); \
-        ((p)[0]) = t;        \
-    } while (0)
+#define ROTATE_LFSR_3(p, t) \
+    ((p)[2]) = ((p)[1]);    \
+    ((p)[1]) = ((p)[0]);    \
+    ((p)[0]) = t            \
 
 // One rotation of 32 bits on a LFSR of size 4 (max 128 bits)
-#define ROTATE_LFSR_4(p, t)  \
-    do {                     \
-        ((p)[3]) = ((p)[2]); \
-        ((p)[2]) = ((p)[1]); \
-        ((p)[1]) = ((p)[0]); \
-        ((p)[0]) = t;        \
-    } while (0)
+#define ROTATE_LFSR_4(p, t) \
+    ((p)[3]) = ((p)[2]);    \
+    ((p)[2]) = ((p)[1]);    \
+    ((p)[1]) = ((p)[0]);    \
+    ((p)[0]) = t            \
 
 // Maybe something to do better here
 #define S64(p, b) (((p)[1] << ((b) - 64)) | ((p)[2] >> (96 - (b))))
