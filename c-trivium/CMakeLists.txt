@@ -6,4 +6,4 @@ include_directories(inc)
 
 file(GLOB SOURCES src/*.c)
 
-add_executable(testTrivium ${SOURCES})
+add_library(trivium SHARED ${SOURCES})
