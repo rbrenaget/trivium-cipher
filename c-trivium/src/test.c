@@ -37,10 +37,11 @@ void debug_data(const uint32_t* data, uint32_t len) {
     printf("\n");   
 }
 
+#define OUTLEN 64
 
 int main() {
     TRIVIUM_ctx ctx;
-    uint32_t output[4] = {0};
+    uint32_t output[OUTLEN] = {0};
 
     //Set 6, vector# 3:
     const uint8_t key[10] = {0xfa, 0xa7, 0x54, 0x01, 0xae, 0x5b, 0x08, 0xb5, 0x62, 0x0f};
@@ -53,9 +54,9 @@ int main() {
     TRIVIUM_init(&ctx, key, iv, sizeof(key), sizeof(iv));
 
     printf("Keystream :\n");
-    TRIVIUM_genkeystream32(&ctx, output, 4);
-    debug_data(output, 4);
-    print_uint32(output[0]);
+    TRIVIUM_genkeystream32(&ctx, output, OUTLEN);
+    
+    debug_data(output, OUTLEN);
 
     return 0;
 }
