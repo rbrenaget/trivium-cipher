@@ -1,13 +1,12 @@
 /**
  * @file test.c
  * @author Romain Brenaget
- * @brief Simple verification test, this is not unit test
+ * @brief Simple verification test, this is not unit test.
  * @version 0.1
  * @date 2020-03-03
  */
 
 #include <stdio.h>
-
 #include <trivium.h>
 
 
