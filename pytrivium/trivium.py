@@ -5,14 +5,18 @@ from pathlib import Path
 
 
 class Trivium(object):
-    """
+    """Trivium class with bindings to the C library using cffi.
+    :param h_file_path: Path to the Trivium hearder file (default is None).
+    :type h_file_path: str
+    :param lib_trivium_path: Path to the Trivium library (default is None).
+    :type lib_trivium_path: str
     """
 
     MAX_KEY_LEN = 10
     MAX_IV_LEN = 10
 
     def __init__(self, h_file_path=None, lib_trivium_path=None):
-        # Get Trivium header and library paths
+        # Gets Trivium header and library paths
         if h_file_path is None:
             self.h_file_path = Path().absolute().as_posix()+'/../c-trivium/inc/trivium.h'
         else:
@@ -25,7 +29,7 @@ class Trivium(object):
         # Instantiate cffi base object
         self.ffi = FFI()
 
-        # Load Trivium header file
+        # Loads Trivium header file
         with open(self.h_file_path) as h_file:
             out = ''
             for line in h_file.readlines():
@@ -33,18 +37,31 @@ class Trivium(object):
                     out += line.replace('MAX_KEY_LEN', str(self.MAX_KEY_LEN)).replace('MAX_IV_LEN', str(self.MAX_IV_LEN))
             self.ffi.cdef(out)
 
-        # Load the shared library into ffi
+        # Loads the shared library into ffi
         self.lib = self.ffi.dlopen(self.lib_trivium_path)
 
-        self.context = self.ffi.new('TRIVIUM_ctx*')
+        self.context = None
+        self.keystream = []
 
     def initialize(self, key, iv):
+        """Initializes the Trivium context.
+        :param key: The secret key (10 bytes max)
+        :type key: list[uint8_t,]
+        :param iv: The initialization vector (10 bytes max)
+        :type iv: list[uint8_t,]
         """
-        """
-        # Get key and iv length
+        # Gets key and iv lengths
         keylen = len(key)
         ivlen = len(iv)
-        # Initialialize Trivium
+
+        # Verifies key and iv lengths
+        if keylen > self.MAX_KEY_LEN:
+            raise Exception(f'Maximum key length is {self.MAX_KEY_LEN}')
+        if ivlen > self.MAX_IV_LEN:
+            raise Exception(f'Maximum iv length is {self.MAX_IV_LEN}')
+
+        # Initialializes Trivium
+        self.context = self.ffi.new('TRIVIUM_ctx*')
         self.lib.TRIVIUM_init(
             self.context,
             self.ffi.new(f'uint8_t[{keylen}]', key),
@@ -54,19 +71,26 @@ class Trivium(object):
         )
 
     def update(self, n):
-        """
+        """Processes n*32-bit key stream generation.
+        :param n: The number of 32-bit key stream to generate.
+        :type n: int
         """
         output = self.ffi.new(f'uint32_t[{n}]')
-        # Generate n*32 bits of key stream
+        # Generates n*32 bits of key stream
         self.lib.TRIVIUM_genkeystream32(
             self.context,
             output,
             self.ffi.cast('uint32_t', n)
         )
-
-        return output
+        # Store generated values
+        self.keystream.extend([o for o in output])
 
     def finalize(self):
+        """Finalizes the Tricium constext and returns the generated key stream.
+        :returns: The key stream generated.
+        :rtype: list
         """
-        """
-        pass
+        self.context = None
+
+        return self.keystream
+
