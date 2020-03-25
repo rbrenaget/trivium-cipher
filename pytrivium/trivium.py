@@ -44,7 +44,7 @@ class Trivium(object):
         # Get key and iv length
         keylen = len(key)
         ivlen = len(iv)
-        # Initialialize trivium
+        # Initialialize Trivium
         self.lib.TRIVIUM_init(
             self.context,
             self.ffi.new(f'uint8_t[{keylen}]', key),
@@ -56,7 +56,15 @@ class Trivium(object):
     def update(self, n):
         """
         """
-        pass
+        output = self.ffi.new(f'uint32_t[{n}]')
+        # Generate n*32 bits of key stream
+        self.lib.TRIVIUM_genkeystream32(
+            self.context,
+            output,
+            self.ffi.cast('uint32_t', n)
+        )
+
+        return output
 
     def finalize(self):
         """
