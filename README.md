@@ -4,7 +4,7 @@ In this repository you will find a C implementation of Trivium. This implementat
 
 This project was a way for me to learn more about bitwise operations and LFSRs in C.
 
-The next objective is to create Python bindings with the generated C library.
+The next objective is to made the C implementation more generic.
 
 ## C Implementation
 
@@ -44,4 +44,26 @@ $ mkdir build && cd build/
 $ cmake ..
 $ make
 $ ./libtriviumtest
+```
+
+## Python Implementation
+
+### Implemented features
+
+* Creation of Python bindings to the C shared library using `cffi` (ABI level, in-line). 
+* Creation of the Trivium class with methods: initialize, update and finalize.
+* Add `pytrivium` package to PyPi.
+
+### Future work
+
+* Adds a stream cipher feature.
+* Adds a pseudo-random number generator feature.
+* Binds the future generic Trivium.
+
+### Installation
+
+I advise you to install it in a virtualenv.
+
+```bash
+$ pip install pytrivium
 ```
