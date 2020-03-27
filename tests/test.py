@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from trivium import Trivium
+from pytrivium import Trivium
 
 
 if __name__ == '__main__':
