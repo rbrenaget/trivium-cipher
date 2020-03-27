@@ -52,7 +52,7 @@ $ ./libtriviumtest
 
 * Creation of Python bindings to the C shared library using `cffi` (ABI level, in-line). 
 * Creation of the Trivium class with methods: initialize, update and finalize.
-* Add `pytrivium` package to PyPi.
+* Adding `pytrivium` package to PyPi.
 
 ### Future work
 
