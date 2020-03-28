@@ -8,14 +8,15 @@ with open('README.md', 'r') as fh:
 
 
 setuptools.setup(
-    name="pytrivium",
-    version='1.0.2',
+    name='pytrivium',
+    version='1.0.3',
     author='Romain Brenaget',
     description='Python bindings to a C implementation of Trivium',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/rbrenaget/trivium-sw',
-    packages=setuptools.find_packages(),
+    package_dir={'': 'pytrivium'},
+    packages=setuptools.find_packages(where='pytrivium', exclude=['_cffi_build', '_cffi_src.*']),
     datafiles=[
         ('c-trivium', ['c-trivium/lib/*.so', 'c-trivium/inc/*.h'])
     ],
@@ -27,6 +28,10 @@ setuptools.setup(
         'Operating System :: POSIX :: Linux',
         'Topic :: Security :: Cryptography'
     ],
-    python_requires='>=3.6'
+    python_requires='>=3.6',
+    install_requires=['cffi'],
+    setup_requires=['cffi'],
+    ext_package='pytrivium',
+    cffi_modules=['pytrivium/_cffi_build/pytrivium_build.py:ffibuilder']
 )
 
