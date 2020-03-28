@@ -1,3 +1,0 @@
-graft c-trivium
-include c-trivium/lib/*.so
-include c-trivium/inc/*.h
