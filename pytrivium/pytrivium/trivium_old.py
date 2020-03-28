@@ -17,12 +17,13 @@ class Trivium(object):
 
     def __init__(self, h_file_path=None, lib_trivium_path=None):
         # Gets Trivium header and library paths
+        dirname = Path(__file__).parent.absolute().as_posix()
         if h_file_path is None:
-            self.h_file_path = Path().absolute().as_posix()+'/../c-trivium/inc/trivium.h'
+            self.h_file_path = dirname + '/../../c-trivium/inc/trivium.h'
         else:
             self.h_file_path = h_file_path
         if lib_trivium_path is None:
-            self.lib_trivium_path = Path().absolute().as_posix() + '/../c-trivium/lib/libtrivium.so'
+            self.lib_trivium_path = dirname + '/../../c-trivium/lib/libtrivium.so'
         else:
             self.lib_trivium_path = lib_trivium_path
 
@@ -93,4 +94,3 @@ class Trivium(object):
         self.context = None
 
         return self.keystream
-
