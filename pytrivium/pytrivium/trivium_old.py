@@ -4,8 +4,8 @@ from cffi import FFI
 from pathlib import Path
 
 
-class Trivium(object):
-    """Trivium class with bindings to the C library using cffi.
+class TriviumABI(object):
+    """Trivium class with bindings to the C library using cffi (ABI Mode).
     :param h_file_path: Path to the Trivium hearder file (default is None).
     :type h_file_path: str
     :param lib_trivium_path: Path to the Trivium library (default is None).
