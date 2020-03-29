@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import setuptools
+import pathlib
+import shutil
 
 
 with open('README.md', 'r') as fh:
@@ -9,18 +11,15 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
     name='pytrivium',
-    version='1.0.3',
+    version='1.0.5',
     author='Romain Brenaget',
+
     description='Python bindings to a C implementation of Trivium',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/rbrenaget/trivium-sw',
-    package_dir={'': 'pytrivium'},
-    packages=setuptools.find_packages(where='pytrivium', exclude=['_cffi_build', '_cffi_src.*']),
-    datafiles=[
-        ('c-trivium', ['c-trivium/lib/*.so', 'c-trivium/inc/*.h'])
-    ],
-    include_package_data=True,
+    license='MIT',
+    url='https://github.com/rbrenaget/trivium-sw/pytrivium',
+
     classifiers=[
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
@@ -28,10 +27,16 @@ setuptools.setup(
         'Operating System :: POSIX :: Linux',
         'Topic :: Security :: Cryptography'
     ],
+
+    package_dir={'': 'src'},
+    packages=setuptools.find_packages(where='src', exclude=['_cffi_src', '_cffi_src.*']),
+    include_package_data=True,
+
     python_requires='>=3.6',
+
     install_requires=['cffi'],
     setup_requires=['cffi'],
-    ext_package='pytrivium',
-    cffi_modules=['pytrivium/_cffi_build/pytrivium_build.py:ffibuilder']
+    zip_safe=False,
+    ext_package='pytrivium.bindings',
+    cffi_modules=['src/_cffi_src/trivium_build.py:ffibuilder'],
 )
-
