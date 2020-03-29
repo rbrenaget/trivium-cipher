@@ -1,3 +1,4 @@
-recursive-include _cffi_build *.c *.h *.so
-include ../c-trivium/inc/*.h
-include ../c-trivium/lib/*.so
+recursive-include src/_cffi_src *.py *.c *.h
+recursive-include tests *.py
+
+exclude pytrivium/trivium_old.py
