@@ -2,7 +2,7 @@
 
 Here is a Python implementation of Trivium. It uses `cffi` to bind Python with the C implementation.
 
-This package provides short examples to learn about Python bindings and distributions.
+This package provides short examples to learn about Python bindings and distributing packages.
 
 ## Installation
 
