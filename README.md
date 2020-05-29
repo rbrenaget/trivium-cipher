@@ -1,12 +1,10 @@
-# Trivium - Software Implementation
+# Trivium - Software Implementations
 
-In this repository you will find a C implementation of Trivium. This implementation is quite similar of the official one that you can find on [eCrypt](https://www.ecrypt.eu.org/stream/e2-trivium.html). 
-
-This project was a way for me to learn more about bitwise operations and LFSRs in C.
-
-The next objective is to made the C implementation more generic.
+In this repository you will find a collection of Trivium software implementations.
 
 ## C Implementation
+
+Simple pure C implementation of Trivium.
 
 ### Implemented Features
 
@@ -15,42 +13,17 @@ The next objective is to made the C implementation more generic.
 
 ### Future Work
 
-* Instantiate Trivium as a CSPRNG (Cryptographically Secure Pseudo-Random Number Generator).
-* Allow plain text encryption by xoring the plain text with the key stream.
-* Make a generic implementation to allow 8-bit, 16-bit, 32-bit and 64-bit output by rotation.
-
-### Build Shared Library
-
-```bash
-# Go to C Trivium working directory
-$ cd c-trivium/
-# Create a build directory and go in it
-$ mkdir build && cd build/
-# Run cmake to generate the project compilation files
-$ cmake ..
-# Run make to compile the shared library
-$ make
-# Run make install to move the library in c-trivium/lib/
-$ make install
-```
-
-### Build Tests
-
-These tests are not exhaustive. For now, it is not intended to provide complete unit test. It is just a way to verify the correctness of the output keystream.
-
-```bash
-$ cd c-trivium/
-$ mkdir build && cd build/
-$ cmake ..
-$ make
-$ ./libtriviumtest
-```
+* Instantiates Trivium as a CSPRNG (Cryptographically Secure Pseudo-Random Number Generator).
+* Allows plain text encryption by xoring the plain text with the key stream.
+* Makes a generic implementation to allow 8-bit, 16-bit, 32-bit and 64-bit output by rotation.
 
 ## Python Implementation
 
+Python bindings to the C implementation.
+
 ### Implemented features
 
-* Creation of Python bindings to the C shared library using `cffi` (ABI level, in-line). 
+* Creation of Python bindings to the C implementation using `cffi` (API level, out-of-line). 
 * Creation of the Trivium class with methods: initialize, update and finalize.
 * Adding `pytrivium` package to PyPi.
 
@@ -58,12 +31,4 @@ $ ./libtriviumtest
 
 * Adds a stream cipher feature.
 * Adds a pseudo-random number generator feature.
-* Binds the future generic Trivium.
-
-### Installation
-
-I advise you to install it in a virtualenv.
-
-```bash
-$ pip install pytrivium
-```
+* Bindings with the future generic Trivium.
