@@ -11,7 +11,7 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
     name='pytrivium',
-    version='1.0.6',
+    version='1.0.7',
     author='Romain Brenaget',
 
     description='Python bindings to a C implementation of Trivium',
