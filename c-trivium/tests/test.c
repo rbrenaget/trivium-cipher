@@ -6,6 +6,7 @@
  * @date 2020-03-03
  */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <trivium.h>
 

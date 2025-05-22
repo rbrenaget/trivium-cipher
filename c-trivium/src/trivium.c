@@ -7,7 +7,10 @@
  * @date 2020-03-03
  */
 
+#include <stdint.h>
+
 #include "trivium.h"
+
 
 // Converts 4 bytes to a 32 bits unsigned integer (big endian)
 #define U8TO32_BE(p)              \
@@ -69,12 +72,16 @@ void TRIVIUM_init(TRIVIUM_ctx* ctx, const uint8_t key[], const uint8_t iv[], uin
     // Load key into LFSR A
     ctx->lfsr_a[0] = U8TO32_BE(ctx->key);
     ctx->lfsr_a[1] = U8TO32_BE(ctx->key + 4);
-    ctx->lfsr_a[2] = U8TO32_BE(ctx->key + 8) & 0xffff0000;
+    // Safe extraction for the last 2 bytes of key (indices 8-9)
+    ctx->lfsr_a[2] = (((uint32_t)ctx->key[8] << 24) | 
+                      ((uint32_t)ctx->key[9] << 16)) & 0xffff0000;
 
     // Load iv into LFSR B
     ctx->lfsr_b[0] = U8TO32_BE(ctx->iv);
     ctx->lfsr_b[1] = U8TO32_BE(ctx->iv + 4);
-    ctx->lfsr_b[2] = U8TO32_BE(ctx->iv + 8) & 0xffff0000;
+    // Safe extraction for the last 2 bytes of iv (indices 8-9)
+    ctx->lfsr_b[2] = (((uint32_t)ctx->iv[8] << 24) | 
+                      ((uint32_t)ctx->iv[9] << 16)) & 0xffff0000;
 
     // Load LFSR C
     ctx->lfsr_c[0] = 0;
