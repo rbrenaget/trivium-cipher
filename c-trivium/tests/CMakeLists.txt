@@ -28,4 +28,4 @@ set_target_properties(libtriviumtest PROPERTIES
 
 # Enable testing
 enable_testing()
-add_test(NAME trivium_test COMMAND libtriviumtest)S
+add_test(NAME trivium_test COMMAND libtriviumtest)
