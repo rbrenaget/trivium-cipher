@@ -1,0 +1,70 @@
+# Compiled object files
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+*.elf
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Build directories
+/build/
+/bin/
+/dist/
+/Debug/
+/Release/
+/lib/
+
+# CMake files
+CMakeFiles/
+Testing/
+CMakeCache.txt
+CTestTestfile.cmake
+cmake_install.cmake
+Makefile
+
+# Autotools files
+/autom4te.cache/
+aclocal.m4
+compile
+config.guess
+config.log
+config.status
+config.sub
+configure
+depcomp
+install-sh
+ltmain.sh
+missing
+Makefile.in
+
+# Others
+*.log
+*.swp
+*.swo
+*~
+tags
+.DS_Store
+
+# Project files
+libtriviumtest
