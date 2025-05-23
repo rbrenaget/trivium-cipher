@@ -67,4 +67,4 @@ tags
 .DS_Store
 
 # Project files
-libtriviumtest
+trivium_tests
