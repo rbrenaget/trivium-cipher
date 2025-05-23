@@ -22,3 +22,13 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 install(TARGETS trivium DESTINATION lib)
 install(DIRECTORY include/ DESTINATION include)
 
+# Enable testing
+enable_testing()
+
+# Add test executable
+add_executable(trivium_tests tests/test_trivium.c)
+target_link_libraries(trivium_tests trivium)
+target_include_directories(trivium_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+# Add test to CTest
+add_test(NAME trivium_unit_tests COMMAND trivium_tests)
